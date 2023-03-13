@@ -1,73 +1,56 @@
+import pandas as pd
+from sklearn import preprocessing
+from sklearn import tree
 import streamlit as st
+
+weather = pd.read_csv(
+    filepath_or_buffer='assets/weather-raw.csv'
+).set_index(
+    'day'
+)
+
+for column in weather.columns:
+    le = preprocessing.LabelEncoder()
+    le.fit(weather[column])
+    weather[column] = le.transform(weather[column])
+
+X = weather[['outlook', 'temperature', 'humidity', 'windy']]
+y = weather['play']
+model = tree.DecisionTreeClassifier().fit(X, y)
 
 st.write("""
 # Chatbot
-Es-tu positif au COVID-19?!
+Can you play tennis today?
 """)
 
+outlook_options = ("Overcast", "Rainy", "Sunny")
+temperature_options = ("Hot", "Cool", "Mild")
+humidity_options = ("High", "Normal")
+windy_options = ("False", "True")
 
-def douleur():
-    with st.form("douleur"):
-        radio_val = st.radio(
-            "Douleur?",
-            (
-                "Abdomen",
-                "Gorge",
-                "Poitrine",
-                "Aucune"
-            )
-        )
-        submitted = st.form_submit_button("Valider")
-        if submitted:
-            return radio_val
+with st.form("Tennis"):
+    outlook = outlook_options.index(
+        st.selectbox("Outlook?", outlook_options))
+    temperature = temperature_options.index(
+        st.selectbox("Temperature?", temperature_options))
+    humidity = humidity_options.index(
+        st.selectbox("Humidity?", humidity_options))
+    windy = windy_options.index(
+        st.selectbox("Windy?", windy_options))
+    submitted = st.form_submit_button("Submit")
+    if submitted:
+        user_input = {"outlook": outlook, "temperature": temperature,
+                      "humidity": humidity, "windy": windy}
+    else:
+        user_input = None
+        
 
-
-def fievre():
-    with st.form("fievre"):
-        radio_val = st.radio(
-            "Fièvre?",
-            (
-                "Oui",
-                "Non"
-            )
-        )
-        submitted = st.form_submit_button("Valider")
-        if submitted:
-            return radio_val
-
-
-def toux():
-    with st.form("toux"):
-        radio_val = st.radio(
-            "Toux?",
-            (
-                "Oui",
-                "Non"
-            )
-        )
-        submitted = st.form_submit_button("Valider")
-        if submitted:
-            return radio_val
-
-
-match douleur():
-    case "Abdomen":
-        st.write("Diagnostic: **appendicite**")
-    case "Gorge":
-        match fievre():
-            case "Oui":
-                st.write("Diagnostic: **rhume**")
-            case "Non":
-                st.write("Diagnostic: **mal de gorge**")
-    case "Poitrine":
-        st.write("Diagnostic: **infarctus**")
-    case "Aucune":
-        match toux():
-            case "Oui":
-                match fievre():
-                    case "Oui":
-                        st.write("Diagnostic: **refroidissement**")
-                    case "Non":
-                        st.write("Diagnostic: **rhume**")
-            case "Non":
-                st.write("Rien")
+if user_input != None:
+    if model.predict(pd.DataFrame([user_input]))[0] == 0:
+        st.write("""
+        Stay home... It's a bad day to play tennis... 😕
+        """)
+    elif model.predict(pd.DataFrame([user_input]))[0] == 1:
+        st.write("""
+        Take your shoes and call your friends! It's a perfect day to play tennis! 😎
+        """)
