@@ -18,9 +18,12 @@ X = weather[['outlook', 'temperature', 'humidity', 'windy']]
 y = weather['play']
 model = tree.DecisionTreeClassifier().fit(X, y)
 
-st.write("""
+st.markdown("""
 # Chatbot
+
 Can you play tennis today?
+
+---
 """)
 
 outlook_options = ("Overcast", "Rainy", "Sunny")
